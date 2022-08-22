@@ -15,8 +15,7 @@ from flask_migrate import Migrate
 import sys
 import collections
 collections.Callable = collections.abc.Callable
-#from models import db, Artist, Venue, Show
-#import models
+#from models import db, Artist, Venue, Show 
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
@@ -26,7 +25,7 @@ moment = Moment(app)
 app.config.from_object('config')
 db = SQLAlchemy(app)
 #db.init_app(app)
-#app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:5516@localhost:5432/project'
+
 
 
 #----------------------------------------------------------------------------#
@@ -70,8 +69,8 @@ class Artist(db.Model):
 class Show(db.Model):
     __tablename__ = 'Show'
     id = db.Column(db.Integer, primary_key=True)
-    artist_id = db.Column( db.Integer, db.ForeignKey('Artist.id'))
-    venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'))
+    artist_name = db.Column( db.Integer, db.ForeignKey('Artist.name'), nullable=True)
+    venue_name = db.Column(db.Integer, db.ForeignKey('Venue.name'), nullable=True)
     start_time = db.Column(db.DateTime)
 
 
@@ -82,11 +81,14 @@ migrate = Migrate(app, db)
 #----------------------------------------------------------------------------#
 
 def format_datetime(value, format='medium'):
-  date = dateutil.parser.parse(value)
-  if format == 'full':
-      format="EEEE MMMM, d, y 'at' h:mma"
-  elif format == 'medium':
-      format="EE MM, dd, y h:mma"
+  if isinstance(value, str):
+     date = dateutil.parser.parse(value)
+  else:
+      date =value
+  #if format == 'full':
+   #   format="EEEE MMMM, d, y 'at' h:mma"
+  #elif format == 'medium':
+    #  format="EE MM, dd, y h:mma"
   return babel.dates.format_datetime(date, format, locale='en')
 
 app.jinja_env.filters['datetime'] = format_datetime
@@ -139,7 +141,8 @@ def show_venue(venue_id):
   # shows the venue page with the given venue_id
   # TODO: replace with real venue data from the venues table, using venue_id
   venue = Venue.query.get(venue_id)
-  current_time = datetime.now()
+  current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
   upcoming_shows = Show.query.join(Artist).filter( Show.venue_id == venue_id).filter(Show.start_time >= current_time).all()
 
   past_shows = Show.query.join(Artist).filter( Show.venue_id == venue_id).filter(Show.start_time < current_time).all()
@@ -149,8 +152,7 @@ def show_venue(venue_id):
     #            "artist_name": show.artist.name,
      #           "artist_id" : show.artist_id,
       #          "artist_image_link": show.artist.image_link,
-          #      "start_time": show.start_time.strftime('%Y-%m-%d %H:%M:%S')
-           #     })
+          #      "start_time": show.start_time           #     })
 
 #  for show in Show.query.join(Artist).filter( Show.venue_id == venue_id).filter(Show.start_time < current_time).all():
  #        past_shows.append({
@@ -279,8 +281,8 @@ def show_artist(artist_id):
   # shows the artist page with the given artist_id
   # TODO: replace with real artist data from the artist table, using artist_id
   artist = Artist.query.get(artist_id)
-  past_shows = Show.query.join(Venue).filter(Show.artist_id == artist_id, Show.start_time < datetime.now().strftime('%Y-%m-%d %H:%M:%S')).all()
-  upcoming_shows = Show.query.join(Venue).filter(Show.artist_id == artist_id, Show.start_time > datetime.now().strftime('%Y-%m-%d %H:%M:%S')).all()              
+  past_shows = Show.query.join(Venue).filter(Show.artist_id == artist_id, Show.start_time < format_datetime(str(datetime.now()))).all()
+  upcoming_shows = Show.query.join(Venue).filter(Show.artist_id == artist_id, Show.start_time > format_datetime(str(datetime.now()))).all()              
   data = {
           "id" : artist.id,
           "name" : artist.name,
@@ -468,16 +470,18 @@ def shows():
   # displays list of shows at /shows
   # TODO: replace with real venues data.
   data1 = []
-  Shows = Show.query.join(Artist).join(Venue).all()
-
+  Shows = Show.query.all()
   for list_of_show in Shows:
-    data1.append({
+      artist = Artist.query.get(list_of_show.artist_id)
+      venue = Venue.query.get(list_of_show.venue_id)
+      if list_of_show.start_time > datetime.now():
+         data1.append({
         "venue_id" : list_of_show.venue_id,
-        "venue_name" : list_of_show.Venue.name,
+        "venue_name" : venue.name,
         "artist_id" : list_of_show.artist_id,
-        "artist_name" : list_of_show.Artist.name,
-        "artist_image_link" : list_of_show.Artist.image_link,
-        "start_time" : format_datetime(str(list_of_show.start_time))
+        "artist_name" : artist.name,
+        "artist_image_link" : artist.image_link,
+        "start_time" : list_of_show.start_time 
         })
 
   return render_template('pages/shows.html', shows=data1)
