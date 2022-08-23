@@ -43,10 +43,10 @@ def format_datetime(value, format='medium'):
      date = dateutil.parser.parse(value)
   else:
       date =value
-  #if format == 'full':
-   #   format="EEEE MMMM, d, y 'at' h:mma"
-  #elif format == 'medium':
-    #  format="EE MM, dd, y h:mma"
+
+
+
+
   return babel.dates.format_datetime(date, format, locale='en')
 
 app.jinja_env.filters['datetime'] = format_datetime
@@ -166,7 +166,7 @@ def create_venue_submission():
       phone = form.phone.data,
       address = form.address.data,
       genres = ' '.join(form.genres.data),
-      website = form.website_link.data,
+      website_link= form.website_link.data,
       facebook_link = form.facebook_link.data,
       seeking_talent = form.seeking_talent.data,
       image_link = form.image_link.data,
