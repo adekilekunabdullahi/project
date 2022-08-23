@@ -15,7 +15,7 @@ from flask_migrate import Migrate
 import sys
 import collections
 collections.Callable = collections.abc.Callable
-#from models import db, Artist, Venue, Show 
+from models import db, Artist, Venue, Show 
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
@@ -23,56 +23,14 @@ collections.Callable = collections.abc.Callable
 app = Flask(__name__)
 moment = Moment(app)
 app.config.from_object('config')
-db = SQLAlchemy(app)
-#db.init_app(app)
+
+db.init_app(app)
 
 
 
 #----------------------------------------------------------------------------#
 # Models.
 #----------------------------------------------------------------------------#
-class Venue(db.Model):
-    __tablename__ = 'Venue'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120), nullable=False)
-    city = db.Column(db.String(120), nullable=False)
-    state = db.Column(db.String(120), nullable=False)
-    address = db.Column(db.String(120), nullable=False)
-    phone = db.Column(db.String(120), nullable=False)
-    genres = db.Column(db.ARRAY(db.String))
-    image_link = db.Column(db.String(500))
-    facebook_link = db.Column(db.String(120))
-    website = db.Column(db.String(120))
-    seeking_talent = db.Column(db.Boolean, default=True)
-    seeking_description = db.Column(db.String())
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
-
-class Artist(db.Model):
-    __tablename__ = 'Artist'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120), nullable=False)
-    city = db.Column(db.String(120), nullable=False)
-    state = db.Column(db.String(120), nullable=False)
-    phone = db.Column(db.String(120), nullable=False)
-    genres = db.Column(db.ARRAY(db.String))
-    image_link = db.Column(db.String(500))
-    facebook_link = db.Column(db.String(120))
-    website = db.Column(db.String())
-    seeking_venue = db.Column(db.Boolean, default=True)
-    seeking_description= db.Column(db.String(200))
-    Show = db.relationship('Venue', secondary='Show', backref=db.backref('artist', lazy='joined'))
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
-
-# TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
-class Show(db.Model):
-    __tablename__ = 'Show'
-    id = db.Column(db.Integer, primary_key=True)
-    artist_name = db.Column( db.Integer, db.ForeignKey('Artist.name'), nullable=True)
-    venue_name = db.Column(db.Integer, db.ForeignKey('Venue.name'), nullable=True)
-    start_time = db.Column(db.DateTime)
-
 
 migrate = Migrate(app, db)
 
@@ -85,10 +43,10 @@ def format_datetime(value, format='medium'):
      date = dateutil.parser.parse(value)
   else:
       date =value
-  #if format == 'full':
-   #   format="EEEE MMMM, d, y 'at' h:mma"
-  #elif format == 'medium':
-    #  format="EE MM, dd, y h:mma"
+  if format == 'full':
+      format="EEEE MMMM, d, y 'at' h:mma"
+  elif format == 'medium':
+      format="EE MM, dd, y h:mma"
   return babel.dates.format_datetime(date, format, locale='en')
 
 app.jinja_env.filters['datetime'] = format_datetime
@@ -289,7 +247,7 @@ def show_artist(artist_id):
           "city" : artist.city,
           "genres" : artist.genres,
           "phone" : artist.phone,
-          "website_link" : artist.website,
+          "website" : artist.website,
           "facebook_link" : artist.facebook_link,
           "seeking_venue" : artist.seeking_venue,
           "seeking_description": artist.seeking_description,
@@ -337,19 +295,18 @@ def edit_artist_submission(artist_id):
   form = ArtistForm(request.form)
   error = False
   try:
-     artist= particular_artist(
-          id = form.id.data,
-          name = form.name.data,
-          genres = form.genres.data,
-          state = form.state.data,
-          seeking_venue = form.seeking_venue.data,
-          seeking_description = form.seeking_description.data,
-          phone = form.phone.data,
-          website= form.website_link.data,
-          image_link = form.image_link.data,
-          city = form.city.data
-          )
-     db.session.add(artist)
+     
+     particular_artist.name = form.name.data,
+     particular_artist.facebook_link = form.facebook_link.data,
+     particular_artist.genres ='.'.join(form.genres.data),
+     particular_artist.state = form.state.data,
+     particular_artist.seeking_description = form.seeking_description.data,
+     particular_artist.phone = form.phone.data,
+     particular_artist.website= form.website_link.data,
+     particular_artist.image_link = form.image_link.data,
+     particular_artist.city = form.city.data,
+          
+     db.session.add(particular_artist)
      db.session.commit()
   except:
      db.session.rollback()
@@ -358,7 +315,7 @@ def edit_artist_submission(artist_id):
   finally:
      db.session.close()
 
-  return redirect(url_for('show_artist', artist_id=artist))
+  return redirect(url_for('show_artist', artist_id=artist_id))
 
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
@@ -387,23 +344,23 @@ def edit_venue_submission(venue_id):
   # TODO: take values from the form submitted, and update existing
   # venue record with ID <venue_id> using the new attributes
   form = VenueForm(request.form)
-  particular_venue = Venue.query.get(venue_id)
   error = False
   try:
-     venue = particular_venue(
-          id = form.id.data,
-          name = form.name.data,
-          genres = form.genres.data,
-          state = form.state.data,
-          seeking_talent = form.seeking_venue.data,
-          seeking_description = form.seeking_description.data,
-          phone = form.phone.data,
-          website = form.website_link.data,
-          image_link = form.image_link.data,
-          city = form.city.data
-          )
-     db.session.add(venue)
-     db.session.commit()
+      particular_venue = Venue.query.get(venue_id)
+
+      particular_venue.name = form.name.data,
+      particular_venue.genres = ' '.join(form.genres.data),
+      particular_venue.state = form.state.data,
+      particular_venue.address = form.address.data,
+      particular_venue.facebook_link = form.facebook_link.data,
+      particular_venue.seeking_description = form.seeking_description.data,
+      particular_venue.phone = form.phone.data,
+      particular_venue.website = form.website_link.data,
+      particular_venue.image_link = form.image_link.data,
+      particular_venue.city = form.city.data,
+          
+      db.session.add(particular_venue)
+      db.session.commit()
   except:
      db.session.rollback()
      error = True
@@ -412,7 +369,7 @@ def edit_venue_submission(venue_id):
      db.session.close()
 
 
-  return redirect(url_for('show_venue', venue_id=venue))
+  return redirect(url_for('show_venue', venue_id=venue_id))
 
 #  Create Artist
 #  ----------------------------------------------------------------
