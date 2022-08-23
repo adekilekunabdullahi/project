@@ -298,7 +298,7 @@ def edit_artist_submission(artist_id):
      
      particular_artist.name = form.name.data,
      particular_artist.facebook_link = form.facebook_link.data,
-     particular_artist.genres ='.'.join(form.genres.data),
+     particular_artist.genres =' '.join(form.genres.data),
      particular_artist.state = form.state.data,
      particular_artist.seeking_description = form.seeking_description.data,
      particular_artist.phone = form.phone.data,
