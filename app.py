@@ -247,7 +247,7 @@ def show_artist(artist_id):
           "city" : artist.city,
           "genres" : artist.genres,
           "phone" : artist.phone,
-          "website_link" : artist.website,
+          "website" : artist.website,
           "facebook_link" : artist.facebook_link,
           "seeking_venue" : artist.seeking_venue,
           "seeking_description": artist.seeking_description,
